@@ -1,0 +1,16 @@
+spring:
+    application:
+        name: workshop
+    datasource:
+        url: jdbc:mysql://localhost:3306/workshop_db
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        username: jakarta
+        password: jakarta
+    jpa:
+        hibernate:
+            ddl-auto: update
+        database-platform: org.hibernate.dialect.MySQLDialect
+        show-sql: true
+        properties:
+            hibernate:
+                format_sql: true
