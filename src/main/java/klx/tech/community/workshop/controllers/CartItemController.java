@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/cart-items")
+@CrossOrigin(origins = "*")
 public class CartItemController {
 
     private final CartItemService cartItemService;
@@ -50,7 +51,8 @@ public class CartItemController {
         ProductCartItemDTO productCartItemDTO = cartItemService.toProductCartItemDTO(product, quantity);
         return ResponseEntity.ok(productCartItemDTO);
     }
-            /**
+    
+    /**
      * Creates a new CartItem based on the request body.
      *
      * @param request The CartItemRequest DTO containing product IDs and quantities.
