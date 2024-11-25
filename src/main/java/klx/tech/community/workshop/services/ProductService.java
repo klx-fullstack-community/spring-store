@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductService {
-    List<ProductDTO> findAll();
-    Optional<ProductDTO> findById(Long id);
-    ProductDTO toDTO(Product product);
+    List<Product> findAll();
+    Optional<Product> findById(Long id);
+    List<ProductDTO> findAllDTO();
+    Optional<ProductDTO> findByIdDTO(Long id);
+    ProductDTO toProductDTO(Product product);
 }

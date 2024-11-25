@@ -12,13 +12,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
 
     private static final String IMAGE_DIRECTORY = "images"; // Directory for image files
-
     private final ProductRepository productRepository;
 
     public ProductServiceImpl(ProductRepository productRepository) {
@@ -26,44 +24,53 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductDTO> findAll() {
-        List<Product> products = productRepository.findAll();
-        return products.stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    public List<Product> findAll() {
+        return productRepository.findAll();
     }
 
     @Override
-    public Optional<ProductDTO> findById(Long id) {
-        Optional<Product> product = productRepository.findById(id);
-        return product.map(this::toDTO);
+    public Optional<Product> findById(Long id) {
+        return productRepository.findById(id);
+    }
+
+    @Override
+    public List<ProductDTO> findAllDTO() {
+        return productRepository.findAll().stream()
+                .map(this::toProductDTO) 
+                .toList();
+    }
+
+    @Override
+    public Optional<ProductDTO> findByIdDTO(Long id) {
+        return productRepository.findById(id)
+            .map(this::toProductDTO); 
     }
 
     /**
-         * Converts a Product entity to ProductDTO.
-         *
-         * @param product The Product entity.
-         * @return The corresponding ProductDTO.
-         */
-        public ProductDTO toDTO(Product product) {
-            ProductDTO dto = new ProductDTO();
-            dto.setId(product.getId());
-            dto.setName(product.getName());
-            dto.setDescription(product.getDescription());
-            dto.setPrice(product.getPrice());
-        
-            // Safely handle imageUrl and generate full file path
-            if (product.getImageUrl() != null) {
-                String filePath = Paths.get(IMAGE_DIRECTORY, product.getImageUrl()).toString(); // Generate full path
-                dto.setImageBase64(readBase64FromFile(filePath)); // Read Base64 content
-            } else {
-                dto.setImageBase64(null); // Set as null if imageUrl is null
-            }
-        
-            dto.setDiscount(product.getDiscount());
-            dto.setFavorite(product.getFavorite());
-            return dto;
+     * Converts a Product entity to a ProductDTO.
+     *
+     * @param product The Product entity to transform.
+     * @return The corresponding ProductDTO.
+     */
+    public ProductDTO toProductDTO(Product product) {
+        ProductDTO dto = new ProductDTO();
+        dto.setId(product.getId());
+        dto.setName(product.getName());
+        dto.setDescription(product.getDescription());
+        dto.setPrice(product.getPrice());
+    
+        // Safely handle imageUrl and generate full file path
+        if (product.getImageUrl() != null) {
+            String filePath = Paths.get(IMAGE_DIRECTORY, product.getImageUrl()).toString(); // Generate full path
+            dto.setImageBase64(readBase64FromFile(filePath)); // Read Base64 content
+        } else {
+            dto.setImageBase64(null); // Set as null if imageUrl is null
         }
+    
+        dto.setDiscount(product.getDiscount());
+        dto.setFavorite(product.getFavorite());
+        return dto;
+    }
 
     /**
      * Reads the Base64 content from a file.
