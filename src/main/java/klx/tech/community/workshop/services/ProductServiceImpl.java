@@ -40,30 +40,30 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * Converts a Product entity to ProductDTO.
-     *
-     * @param product The Product entity.
-     * @return The corresponding ProductDTO.
-     */
-    private ProductDTO toDTO(Product product) {
-        ProductDTO dto = new ProductDTO();
-        dto.setId(product.getId());
-        dto.setName(product.getName());
-        dto.setDescription(product.getDescription());
-        dto.setPrice(product.getPrice());
-    
-        // Safely handle imageUrl and generate full file path
-        if (product.getImageUrl() != null) {
-            String filePath = Paths.get(IMAGE_DIRECTORY, product.getImageUrl()).toString(); // Generate full path
-            dto.setImageBase64(readBase64FromFile(filePath)); // Read Base64 content
-        } else {
-            dto.setImageBase64(null); // Set as null if imageUrl is null
+         * Converts a Product entity to ProductDTO.
+         *
+         * @param product The Product entity.
+         * @return The corresponding ProductDTO.
+         */
+        public ProductDTO toDTO(Product product) {
+            ProductDTO dto = new ProductDTO();
+            dto.setId(product.getId());
+            dto.setName(product.getName());
+            dto.setDescription(product.getDescription());
+            dto.setPrice(product.getPrice());
+        
+            // Safely handle imageUrl and generate full file path
+            if (product.getImageUrl() != null) {
+                String filePath = Paths.get(IMAGE_DIRECTORY, product.getImageUrl()).toString(); // Generate full path
+                dto.setImageBase64(readBase64FromFile(filePath)); // Read Base64 content
+            } else {
+                dto.setImageBase64(null); // Set as null if imageUrl is null
+            }
+        
+            dto.setDiscount(product.getDiscount());
+            dto.setFavorite(product.getFavorite());
+            return dto;
         }
-    
-        dto.setDiscount(product.getDiscount());
-        dto.setFavorite(product.getFavorite());
-        return dto;
-    }
 
     /**
      * Reads the Base64 content from a file.
