@@ -1,5 +1,6 @@
 package klx.tech.community.workshop.controllers;
 
+import klx.tech.community.workshop.dto.ProductDTO;
 import klx.tech.community.workshop.entities.Product;
 import klx.tech.community.workshop.services.ProductService;
 
@@ -25,9 +26,9 @@ public class ProductController {
      * @return A list of ProductDTO.
      */
     @GetMapping
-    public ResponseEntity<List<Product>> findAll() {
-        List<Product> products = productService.findAll();
-        return ResponseEntity.ok(products);
+    public ResponseEntity<List<ProductDTO>> findAll() {
+        List<ProductDTO> products = productService.findAllDTO();
+        return ResponseEntity.ok(products); // Devuelve la lista de ProductDTO con estado 200
     }
 
     /**
@@ -37,10 +38,10 @@ public class ProductController {
      * @return The ProductDTO with the given ID, or a 404 status if not found.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Product> findById(@PathVariable Long id) {
-        return productService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<ProductDTO> findById(@PathVariable Long id) {
+        return productService.findByIdDTO(id)
+                .map(ResponseEntity::ok) // Devuelve el ProductDTO en la respuesta
+                .orElseGet(() -> ResponseEntity.notFound().build()); // 404 si no existe
     }
 
 }
