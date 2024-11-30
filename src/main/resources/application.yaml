@@ -13,4 +13,18 @@ spring:
         show-sql: true
         properties:
             hibernate:
-                format_sql: true
+                format-sql: true
+    output:
+        ansi:
+            enabled: always
+# logging:
+#     level:
+#         org:
+#             springframework:
+#                 transaction: DEBUG
+#             hibernate:
+#                 SQL: DEBUG
+#                 type:
+#                     descriptor:
+#                         sql:
+#                             BasicBinder: TRACE
