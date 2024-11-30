@@ -4,19 +4,17 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Objects;
-import java.util.Set;
 
 @Entity
 @Data
 @Table(name = "cart_item")
 public class CartItem {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @EmbeddedId
+    private ProductKey id; // Composite primary key
 
-    @OneToMany(mappedBy = "cartItem", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<CartItemProduct> cartItemProducts;
+    @Column(nullable = false)
+    private Integer quantity;
 
     @Override
     public boolean equals(Object o) {
@@ -29,6 +27,6 @@ public class CartItem {
     @Override
     public int hashCode() {
         return Objects.hash(id);
-
     }
+    
 }
