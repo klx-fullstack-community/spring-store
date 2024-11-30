@@ -3,18 +3,23 @@ package klx.tech.community.workshop.services;
 import klx.tech.community.workshop.dto.ProductCartItemDTO;
 import klx.tech.community.workshop.dto.ProductDTO;
 import klx.tech.community.workshop.entities.CartItem;
-import klx.tech.community.workshop.entities.CartItemProduct;
 import klx.tech.community.workshop.entities.Product;
+import klx.tech.community.workshop.entities.ProductKey;
 import klx.tech.community.workshop.repositories.CartItemRepository;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class CartItemServiceImpl implements CartItemService {
+
+    private static final String IMAGE_DIRECTORY = "images"; // Directory for image files
 
     private final CartItemRepository cartItemRepository;
     private final ProductService productService;
@@ -27,111 +32,83 @@ public class CartItemServiceImpl implements CartItemService {
     @Override
     @Transactional
     public List<ProductCartItemDTO> addProductToCartItem(ProductDTO productDTO) {
-        // Constant ID for the CartItem (always working with cart_item ID = 1)
-        final Long cartItemId = 1L;
-
-        // Find the CartItem with ID = 1
-        CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new RuntimeException("CartItem not found with id: " + cartItemId));
-
-        // Check if the product exists in the products table
-        Optional<Product> optionalProduct = productService.findById(productDTO.getId());
-        if (optionalProduct.isEmpty()) {
-            // If the product does not exist, return the current list without making changes
-            return cartItem.getCartItemProducts().stream()
-                    .map(cartItemProduct -> toProductCartItemDTO(cartItemProduct.getProduct(), cartItemProduct.getQuantity()))
-                    .collect(Collectors.toList());
+        // Try to fetch the product from the database
+        Product product = productService.findById(productDTO.getId()).orElse(null);
+    
+        // If the product does not exist, return the current list without making changes
+        if (product == null) {
+            return findAll(); // Return the current state of the cart
         }
-
-        Product product = optionalProduct.get();
-
-        // Find if the product already exists in the CartItem
-        CartItemProduct existingCartItemProduct = cartItem.getCartItemProducts().stream()
-                .filter(cartItemProduct -> cartItemProduct.getProduct().getId().equals(productDTO.getId()))
-                .findFirst()
-                .orElse(null);
-
-        if (existingCartItemProduct != null) {
-            // If the product exists, increment its quantity
-            existingCartItemProduct.setQuantity(existingCartItemProduct.getQuantity() + 1);
-        } else {
-            // If the product does not exist in the CartItem, add it with quantity = 1
-            CartItemProduct newCartItemProduct = new CartItemProduct();
-            newCartItemProduct.setCartItem(cartItem);
-            newCartItemProduct.setProduct(product);
-            newCartItemProduct.setQuantity(1);
-            cartItem.getCartItemProducts().add(newCartItemProduct);
-        }
-
+    
+        // Create a composite key
+        ProductKey productKey = new ProductKey();
+        productKey.setProduct(product);
+    
+        // Find or create the CartItem for the product
+        CartItem cartItem = cartItemRepository.findById(productKey).orElseGet(() -> {
+            CartItem newCartItem = new CartItem();
+            newCartItem.setId(productKey);
+            newCartItem.setQuantity(0);
+            return newCartItem;
+        });
+    
+        // Increment the quantity
+        cartItem.setQuantity(cartItem.getQuantity() + 1);
+    
         // Save the updated CartItem
         cartItemRepository.save(cartItem);
-
+    
         // Return the updated list of ProductCartItemDTO
-        return cartItem.getCartItemProducts().stream()
-                .map(cartItemProduct -> toProductCartItemDTO(cartItemProduct.getProduct(), cartItemProduct.getQuantity()))
-                .collect(Collectors.toList());
+        return findAll();
     }
-
 
     @Override
     @Transactional
     public List<ProductCartItemDTO> deleteProductFromCartItem(Long productId) {
-        // Constant ID for the CartItem (always working with cart_item ID = 1)
-        final Long cartItemId = 1L;
-
-        // Fetch the CartItem with ID = 1
-        CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new RuntimeException("CartItem not found with id: " + cartItemId));
-
-        // Find the product in the cart_item_product table
-        CartItemProduct existingCartItemProduct = cartItem.getCartItemProducts().stream()
-                .filter(cartItemProduct -> cartItemProduct.getProduct().getId().equals(productId))
-                .findFirst()
-                .orElse(null);
-
-        if (existingCartItemProduct != null) {
-            if (existingCartItemProduct.getQuantity() > 1) {
-                // Decrease quantity by 1
-                existingCartItemProduct.setQuantity(existingCartItemProduct.getQuantity() - 1);
+        // Try to fetch the product from the database
+        Product product = productService.findById(productId).orElse(null);
+    
+        // If the product does not exist, return the current list without making changes
+        if (product == null) {
+            return findAll(); // Return the current state of the cart
+        }
+    
+        // Create a composite key
+        ProductKey productKey = new ProductKey();
+        productKey.setProduct(product);
+    
+        // Find the CartItem associated with the product
+        CartItem cartItem = cartItemRepository.findById(productKey).orElse(null);
+    
+        if (cartItem != null) {
+            if (cartItem.getQuantity() > 1) {
+                // Decrease the quantity
+                cartItem.setQuantity(cartItem.getQuantity() - 1);
+                cartItemRepository.save(cartItem);
             } else {
-                // Remove the product from the CartItem if quantity becomes 0
-                cartItem.getCartItemProducts().remove(existingCartItemProduct);
+                // Remove the CartItem if the quantity becomes zero
+                cartItemRepository.delete(cartItem);
             }
         }
-
-        // Save the updated CartItem
-        cartItemRepository.save(cartItem);
-
+    
         // Return the updated list of ProductCartItemDTO
-        return cartItem.getCartItemProducts().stream()
-                .map(cartItemProduct -> toProductCartItemDTO(cartItemProduct.getProduct(), cartItemProduct.getQuantity()))
-                .collect(Collectors.toList());
+        return findAll();
     }
-
-
+    
 
     @Override
+    @Transactional
     public List<ProductCartItemDTO> findAll() {
+        // Fetch all CartItems from the database
+        List<CartItem> cartItems = cartItemRepository.findAll();
     
-    List<CartItem> cartItems = cartItemRepository.findAll();
-
-    return cartItems.stream()
-            .filter(cartItem -> !cartItem.getCartItemProducts().isEmpty()) // Exclude CartItems with no products
-            .flatMap(cartItem -> cartItem.getCartItemProducts().stream())
-            .map(cartItemProduct -> {
-                Product product = cartItemProduct.getProduct();
-                Integer quantity = cartItemProduct.getQuantity();
-                return toProductCartItemDTO(product, quantity);
-            })
-            .collect(Collectors.toList());
-    }
-
-    private ProductCartItemDTO toProductCartItemDTO(Product product, Integer quantity) {
-        ProductDTO productDTO = productService.toProductDTO(product);
-        return ProductCartItemDTO.builder()
-                .product(productDTO)
-                .quantity(quantity)
-                .build();
+        // Transform each CartItem into a ProductCartItemDTO
+        return cartItems.stream()
+                .map(cartItem -> ProductCartItemDTO.builder()
+                        .product(productService.toProductDTO(cartItem.getId().getProduct())) // Access the product via the composite key
+                        .quantity(cartItem.getQuantity()) // Get the quantity
+                        .build())
+                .collect(Collectors.toList());
     }
 
 }
