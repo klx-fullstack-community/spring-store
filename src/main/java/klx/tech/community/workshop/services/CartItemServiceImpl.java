@@ -9,17 +9,11 @@ import klx.tech.community.workshop.repositories.CartItemRepository;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class CartItemServiceImpl implements CartItemService {
-
-    private static final String IMAGE_DIRECTORY = "images"; // Directory for image files
 
     private final CartItemRepository cartItemRepository;
     private final ProductService productService;
