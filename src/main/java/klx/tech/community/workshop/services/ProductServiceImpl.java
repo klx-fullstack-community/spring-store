@@ -6,17 +6,12 @@ import klx.tech.community.workshop.repositories.ProductRepository;
 
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ProductServiceImpl implements ProductService {
 
-    private static final String IMAGE_DIRECTORY = "images"; // Directory for image files
     private final ProductRepository productRepository;
 
     public ProductServiceImpl(ProductRepository productRepository) {
@@ -46,48 +41,25 @@ public class ProductServiceImpl implements ProductService {
             .map(this::toProductDTO); 
     }
 
-    /**
-     * Converts a Product entity to a ProductDTO.
-     *
-     * @param product The Product entity to transform.
-     * @return The corresponding ProductDTO.
-     */
+    @Override
     public ProductDTO toProductDTO(Product product) {
-        ProductDTO dto = new ProductDTO();
-        dto.setId(product.getId());
-        dto.setName(product.getName());
-        dto.setDescription(product.getDescription());
-        dto.setPrice(product.getPrice());
-    
-        // Safely handle imageUrl and generate full file path
-        if (product.getImageUrl() != null) {
-            String filePath = Paths.get(IMAGE_DIRECTORY, product.getImageUrl()).toString(); // Generate full path
-            dto.setImageBase64(readBase64FromFile(filePath)); // Read Base64 content
-        } else {
-            dto.setImageBase64(null); // Set as null if imageUrl is null
-        }
-    
-        dto.setDiscount(product.getDiscount());
-        dto.setFavorite(product.getFavorite());
-        return dto;
+        return ProductDTO.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .discount(product.getDiscount())
+                .favorite(product.getFavorite())
+                .imageUrl(buildImageUrl(product.getImageUrl())) // Pass the image_url field
+                .build();
     }
 
-    /**
-     * Reads the Base64 content from a file.
-     *
-     * @param filePath The path of the file to read.
-     * @return The Base64 string contained in the file, or null if the file does not exist.
-     */
-    private String readBase64FromFile(String filePath) {
-        try {
-            Path path = Paths.get(filePath);
-            if (Files.exists(path)) {
-                return Files.readString(path);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Error reading Base64 content from file: " + e.getMessage());
+    private String buildImageUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            // Default placeholder or null if no image is available
+            return "http://localhost:8080/images/default.txt";
         }
-        return null;
+        return String.format("http://localhost:8080/images/%s", imageUrl);
     }
 
 }
