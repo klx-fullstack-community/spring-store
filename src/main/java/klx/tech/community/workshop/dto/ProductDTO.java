@@ -16,5 +16,5 @@ public class ProductDTO {
     private Double price;
     private Double discount;
     private Boolean favorite;
-    private String imageBase64; // Base64 image
+    private String imageUrl; // Base64 image
 }
