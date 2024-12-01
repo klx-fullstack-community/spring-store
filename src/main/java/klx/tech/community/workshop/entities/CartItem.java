@@ -7,7 +7,7 @@ import java.util.Objects;
 
 @Entity
 @Data
-@Table(name = "cart_item")
+@Table(name = "cart_items")
 public class CartItem {
 
     @EmbeddedId
