@@ -2,14 +2,12 @@ spring:
     application:
         name: workshop
     datasource:
-        url: jdbc:mysql://localhost:3306/workshop_db
-        driver-class-name: com.mysql.cj.jdbc.Driver
-        username: jakarta
-        password: jakarta
+        url: jdbc:sqlite:database/store.db
+        driver-class-name: org.sqlite.JDBC
     jpa:
         hibernate:
             ddl-auto: update
-        database-platform: org.hibernate.dialect.MySQLDialect
+        database-platform: org.hibernate.community.dialect.SQLiteDialect
         show-sql: true
         properties:
             hibernate:
